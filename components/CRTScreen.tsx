@@ -1,16 +1,11 @@
 'use client';
 
-import { useRef, useState, useEffect, useCallback } from 'react';
-import Marketplace from './Marketplace';
-import { listings } from '@/lib/listings';
-
-type View = 'start' | 'market';
+import { useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function CRTScreen() {
+  const router = useRouter();
   const screenRef = useRef<HTMLDivElement>(null);
-  const [view, setView] = useState<View>('start');
-  const [currentListing, setCurrentListing] = useState(0);
-  const touchStartX = useRef(0);
   const transitioning = useRef(false);
 
   // Tennis ball custom cursor on desktop
@@ -39,14 +34,6 @@ export default function CRTScreen() {
     document.documentElement.style.cursor = `url(${canvas.toDataURL()}) 16 16, auto`;
   }, []);
 
-  // Preload all listing images on mount
-  useEffect(() => {
-    listings.forEach(l => {
-      const img = new window.Image();
-      img.src = l.photo;
-    });
-  }, []);
-
   const tvTransition = useCallback(async (callback: () => void) => {
     if (transitioning.current) return;
     const screen = screenRef.current;
@@ -72,50 +59,12 @@ export default function CRTScreen() {
   }, []);
 
   const showMarket = useCallback(() => {
-    tvTransition(() => setView('market'));
-  }, [tvTransition]);
-
-  const goHome = useCallback(() => {
-    tvTransition(() => setView('start'));
-  }, [tvTransition]);
-
-  const goNext = useCallback(() => {
-    setCurrentListing(i => (i + 1) % listings.length);
-  }, []);
-
-  const goPrev = useCallback(() => {
-    setCurrentListing(i => (i - 1 + listings.length) % listings.length);
-  }, []);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (view !== 'market') return;
-      if (e.key === 'ArrowRight') goNext();
-      if (e.key === 'ArrowLeft') goPrev();
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [view, goNext, goPrev]);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  }, []);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (view !== 'market') return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(dx) > 40) dx < 0 ? goNext() : goPrev();
-  }, [view, goNext, goPrev]);
+    tvTransition(() => router.push('/marketplace'));
+  }, [tvTransition, router]);
 
   return (
     <div className="crt-outer">
-      <div
-        ref={screenRef}
-        className="crt-screen"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+      <div ref={screenRef} className="crt-screen">
         <div className="scanlines" />
         <div className="vhs-noise" />
         <div className="vhs-glitch" />
@@ -124,43 +73,23 @@ export default function CRTScreen() {
         <div className="vhs-tint" />
         <div className="vhs-scanroll" />
 
-        {view === 'start' && (
-          <div className="screen-content start-screen">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/nuqta-logo-v3.png"
-              alt="NUQTA"
-              className="nuqta-logo"
-            />
-            <button
-              className="press-start-btn"
-              onClick={showMarket}
-              onTouchEnd={e => { e.preventDefault(); showMarket(); }}
-            >
-              <span className="breathe-text">PRESS START</span>
-            </button>
-            <div className="copyright">© 2026 NUQTA</div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/racket-2.png"
-              alt=""
-              className="racket-img"
-            />
-          </div>
-        )}
-
-        {view === 'market' && (
-          <Marketplace
-            currentListing={currentListing}
-            onNext={goNext}
-            onPrev={goPrev}
-          />
-        )}
+        <div className="screen-content start-screen">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/nuqta-logo-v3.png" alt="NUQTA" className="nuqta-logo" />
+          <button
+            className="press-start-btn"
+            onClick={showMarket}
+            onTouchEnd={e => { e.preventDefault(); showMarket(); }}
+          >
+            <span className="breathe-text">PRESS START</span>
+          </button>
+          <div className="copyright">© 2026 NUQTA</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/racket-2.png" alt="" className="racket-img" />
+        </div>
       </div>
 
-      <div className="crt-label" onClick={goHome} style={{ cursor: 'pointer' }}>
-        NUQTA
-      </div>
+      <div className="crt-label" style={{ cursor: 'default' }}>NUQTA</div>
     </div>
   );
 }

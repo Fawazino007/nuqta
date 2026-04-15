@@ -1,0 +1,218 @@
+'use client';
+
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+
+interface Listing {
+  id: string;
+  seller_name: string;
+  photo_url: string;
+  racket_name: string;
+  condition: string;
+  weight: string;
+  grip_size: string;
+  price: string;
+  whatsapp: string;
+}
+
+export default function MarketplaceBrowse() {
+  const router = useRouter();
+  const screenRef = useRef<HTMLDivElement>(null);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [current, setCurrent] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const touchStartX = useRef(0);
+  const transitioning = useRef(false);
+
+  // Tennis ball cursor on desktop
+  useEffect(() => {
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = 32; canvas.height = 32;
+    const ctx = canvas.getContext('2d')!;
+    const cx = 16, cy = 16, r = 14;
+    ctx.globalAlpha = 0.82;
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#e8e4d8'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.72, cy - r * 0.75);
+    ctx.bezierCurveTo(cx - r * 0.45, cy - r * 0.2, cx - r * 0.45, cy + r * 0.2, cx - r * 0.72, cy + r * 0.75);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + r * 0.72, cy - r * 0.75);
+    ctx.bezierCurveTo(cx + r * 0.45, cy - r * 0.2, cx + r * 0.45, cy + r * 0.2, cx + r * 0.72, cy + r * 0.75);
+    ctx.stroke();
+    document.documentElement.style.cursor = `url(${canvas.toDataURL()}) 16 16, auto`;
+  }, []);
+
+  // Fetch active listings
+  useEffect(() => {
+    supabase
+      .from('listings')
+      .select('*')
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) setListings(data as Listing[]);
+        setLoading(false);
+      });
+  }, []);
+
+  // Reset image state on listing change
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [current]);
+
+  const tvTransition = useCallback(async (callback: () => void) => {
+    if (transitioning.current) return;
+    const screen = screenRef.current;
+    if (!screen) return;
+    transitioning.current = true;
+    screen.style.transition = 'transform 0.28s ease-in, filter 0.15s ease-in';
+    screen.style.transform = 'perspective(1200px) rotateX(1deg) scaleY(0.004)';
+    screen.style.filter = 'brightness(5)';
+    await new Promise(r => setTimeout(r, 160));
+    screen.style.filter = 'brightness(0)';
+    await new Promise(r => setTimeout(r, 160));
+    callback();
+    await new Promise(r => setTimeout(r, 60));
+    screen.style.transition = 'transform 0.45s ease-out, filter 0.2s ease-out';
+    screen.style.transform = 'perspective(1200px) rotateX(1deg) scaleY(1)';
+    screen.style.filter = 'brightness(1.4)';
+    await new Promise(r => setTimeout(r, 220));
+    screen.style.filter = '';
+    await new Promise(r => setTimeout(r, 230));
+    screen.style.transition = '';
+    transitioning.current = false;
+  }, []);
+
+  const goHome = useCallback(() => {
+    tvTransition(() => router.push('/'));
+  }, [tvTransition, router]);
+
+  const goNext = useCallback(() => {
+    setCurrent(i => (i + 1) % listings.length);
+  }, [listings.length]);
+
+  const goPrev = useCallback(() => {
+    setCurrent(i => (i - 1 + listings.length) % listings.length);
+  }, [listings.length]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (listings.length < 2) return;
+      if (e.key === 'ArrowRight') goNext();
+      if (e.key === 'ArrowLeft') goPrev();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [listings.length, goNext, goPrev]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (listings.length < 2) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 40) dx < 0 ? goNext() : goPrev();
+  }, [listings.length, goNext, goPrev]);
+
+  const l = listings[current];
+  const waUrl = l
+    ? `https://wa.me/965${l.whatsapp}?text=${encodeURIComponent(`Hi, I'm interested in your ${l.racket_name} listed on NUQTA`)}`
+    : '#';
+
+  return (
+    <div className="crt-outer">
+      <div
+        ref={screenRef}
+        className="crt-screen"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="scanlines" />
+        <div className="vhs-noise" />
+        <div className="vhs-glitch" />
+        <div className="vhs-chroma" />
+        <div className="vhs-bars" />
+        <div className="vhs-tint" />
+        <div className="vhs-scanroll" />
+
+        {loading && (
+          <div className="screen-content" style={{ textAlign: 'center' }}>
+            <p className="market-name loading-blink">LOADING...</p>
+          </div>
+        )}
+
+        {!loading && listings.length === 0 && (
+          <div className="screen-content" style={{ textAlign: 'center' }}>
+            <p className="market-name">NO LISTINGS YET</p>
+          </div>
+        )}
+
+        {!loading && l && (
+          <div className="market-screen">
+            <div className="market-seller">{l.seller_name}</div>
+
+            <div className="market-name">{l.racket_name}</div>
+
+            <div className="market-photo-wrap">
+              <div className="market-photo-box">
+                {!imageLoaded && <div className="market-photo-placeholder" />}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className="market-photo"
+                  src={l.photo_url}
+                  alt={l.racket_name}
+                  style={{ opacity: imageLoaded ? 1 : 0 }}
+                  onLoad={() => setImageLoaded(true)}
+                />
+              </div>
+            </div>
+
+            <div className="market-stats">
+              <div className="market-stat">
+                <span className="market-stat-label">CONDITION</span>
+                {l.condition}
+              </div>
+              <div className="market-stat">
+                <span className="market-stat-label">WEIGHT</span>
+                {l.weight}
+              </div>
+              <div className="market-stat">
+                <span className="market-stat-label">GRIP</span>
+                {l.grip_size}
+              </div>
+            </div>
+
+            <div className="market-price">{l.price}</div>
+
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="whatsapp-btn"
+            >
+              CONTACT ON WHATSAPP
+            </a>
+
+            <div className="market-nav">
+              <button className="nav-btn" onClick={goPrev} aria-label="Previous">◄</button>
+              <div className="market-seller-nav">{l.seller_name}</div>
+              <button className="nav-btn" onClick={goNext} aria-label="Next">►</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="crt-label" onClick={goHome} style={{ cursor: 'pointer' }}>
+        NUQTA
+      </div>
+    </div>
+  );
+}

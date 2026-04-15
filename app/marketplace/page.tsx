@@ -1,3 +1,5 @@
+import MarketplaceBrowse from '@/components/MarketplaceBrowse';
+
 export default function MarketplacePage() {
-  return null;
+  return <MarketplaceBrowse />;
 }

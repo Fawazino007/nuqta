@@ -488,6 +488,198 @@ body {
   100% { top: 105%; }
 }
 
+/* ── AUTH & SELL SCREENS ────────────────────────── */
+
+.auth-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 36px;
+  overflow: hidden;
+}
+
+.sell-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 36px 28px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.auth-back {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(7px, 1vw, 9px);
+  color: #666;
+  background: none;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 1px;
+  padding: 0;
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  transition: color 0.15s;
+  touch-action: manipulation;
+  z-index: 21;
+}
+
+.auth-back:hover { color: #1a1a1a; }
+
+.auth-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(10px, 1.8vw, 14px);
+  color: #1a1a1a;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+.auth-tabs {
+  display: flex;
+  border: 2px solid #1a1a1a;
+  margin-bottom: 20px;
+}
+
+.auth-tab {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(7px, 1vw, 9px);
+  color: #1a1a1a;
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.1s, color 0.1s;
+  touch-action: manipulation;
+}
+
+.auth-tab.active {
+  background: #1a1a1a;
+  color: #e8e4d8;
+}
+
+.auth-tab + .auth-tab { border-left: 2px solid #1a1a1a; }
+
+.pixel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.pixel-field {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.pixel-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(6px, 0.8vw, 8px);
+  color: #666;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.pixel-input,
+.pixel-select {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(8px, 1vw, 10px);
+  color: #1a1a1a;
+  background: #fff;
+  border: 2px solid #1a1a1a;
+  padding: 9px 10px;
+  width: 100%;
+  letter-spacing: 1px;
+  outline: none;
+  box-sizing: border-box;
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.pixel-input::placeholder { color: #aaa; }
+
+.pixel-input:focus,
+.pixel-select:focus { background: #f5f2e8; }
+
+.pixel-select { cursor: pointer; }
+
+.pixel-submit {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(9px, 1.3vw, 11px);
+  color: #e8e4d8;
+  background: rgba(26,26,26,0.88);
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  transition: background 0.15s;
+  margin-top: 4px;
+  touch-action: manipulation;
+  width: 100%;
+}
+
+.pixel-submit:hover,
+.pixel-submit:active { background: #333; }
+
+.pixel-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.pixel-error {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(6px, 0.9vw, 8px);
+  color: #c00;
+  letter-spacing: 1px;
+  text-align: center;
+  line-height: 2;
+}
+
+.pixel-message {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(10px, 1.6vw, 14px);
+  color: #1a1a1a;
+  letter-spacing: 2px;
+  text-align: center;
+  line-height: 2.4;
+}
+
+.pixel-file-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(7px, 1vw, 9px);
+  color: #1a1a1a;
+  background: none;
+  border: 2px solid #1a1a1a;
+  padding: 8px 12px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  display: inline-block;
+  transition: background 0.1s, color 0.1s;
+  touch-action: manipulation;
+}
+
+.pixel-file-label:hover,
+.pixel-file-label:active {
+  background: #1a1a1a;
+  color: #e8e4d8;
+}
+
+.pixel-file-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(6px, 0.8vw, 7px);
+  color: #888;
+  letter-spacing: 1px;
+  margin-top: 5px;
+  word-break: break-all;
+}
+
 /* ── MOBILE ─────────────────────────────────────── */
 
 @media (max-width: 768px) {
@@ -582,4 +774,17 @@ body {
   .nav-btn { font-size: 17px; padding: 13px 24px; }
 
   .whatsapp-btn { font-size: 9px; padding: 12px 16px; }
+
+  .auth-screen { padding: 16px; }
+
+  .sell-screen { padding: 16px 16px 24px; }
+
+  .auth-back { top: 14px; left: 16px; }
+
+  .pixel-form { max-width: 100%; }
+
+  .pixel-input,
+  .pixel-select { font-size: 11px; padding: 10px; }
+
+  .pixel-submit { font-size: 10px; padding: 14px; }
 }

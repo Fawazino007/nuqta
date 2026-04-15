@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 interface Listing {
   id: string;
@@ -18,15 +18,12 @@ interface Listing {
 
 export default function MarketplaceBrowse() {
   const router = useRouter();
-  const screenRef = useRef<HTMLDivElement>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [current, setCurrent] = useState(0);
   const [loading, setLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const touchStartX = useRef(0);
-  const transitioning = useRef(false);
 
-  // Tennis ball cursor on desktop
   useEffect(() => {
     if (!window.matchMedia('(hover: hover)').matches) return;
     const canvas = document.createElement('canvas');
@@ -48,9 +45,9 @@ export default function MarketplaceBrowse() {
     document.documentElement.style.cursor = `url(${canvas.toDataURL()}) 16 16, auto`;
   }, []);
 
-  // Fetch active listings
   useEffect(() => {
-    supabase
+    const client = getSupabase();
+    client
       .from('listings')
       .select('*')
       .eq('status', 'ACTIVE')
@@ -61,37 +58,9 @@ export default function MarketplaceBrowse() {
       });
   }, []);
 
-  // Reset image state on listing change
   useEffect(() => {
     setImageLoaded(false);
   }, [current]);
-
-  const tvTransition = useCallback(async (callback: () => void) => {
-    if (transitioning.current) return;
-    const screen = screenRef.current;
-    if (!screen) return;
-    transitioning.current = true;
-    screen.style.transition = 'transform 0.28s ease-in, filter 0.15s ease-in';
-    screen.style.transform = 'perspective(1200px) rotateX(1deg) scaleY(0.004)';
-    screen.style.filter = 'brightness(5)';
-    await new Promise(r => setTimeout(r, 160));
-    screen.style.filter = 'brightness(0)';
-    await new Promise(r => setTimeout(r, 160));
-    callback();
-    await new Promise(r => setTimeout(r, 60));
-    screen.style.transition = 'transform 0.45s ease-out, filter 0.2s ease-out';
-    screen.style.transform = 'perspective(1200px) rotateX(1deg) scaleY(1)';
-    screen.style.filter = 'brightness(1.4)';
-    await new Promise(r => setTimeout(r, 220));
-    screen.style.filter = '';
-    await new Promise(r => setTimeout(r, 230));
-    screen.style.transition = '';
-    transitioning.current = false;
-  }, []);
-
-  const goHome = useCallback(() => {
-    tvTransition(() => router.push('/'));
-  }, [tvTransition, router]);
 
   const goNext = useCallback(() => {
     setCurrent(i => (i + 1) % listings.length);
@@ -101,7 +70,6 @@ export default function MarketplaceBrowse() {
     setCurrent(i => (i - 1 + listings.length) % listings.length);
   }, [listings.length]);
 
-  // Keyboard navigation
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (listings.length < 2) return;
@@ -130,7 +98,6 @@ export default function MarketplaceBrowse() {
   return (
     <div className="crt-outer">
       <div
-        ref={screenRef}
         className="crt-screen"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -210,7 +177,7 @@ export default function MarketplaceBrowse() {
         )}
       </div>
 
-      <div className="crt-label" onClick={goHome} style={{ cursor: 'pointer' }}>
+      <div className="crt-label" onClick={() => router.push('/')} style={{ cursor: 'pointer' }}>
         NUQTA
       </div>
     </div>

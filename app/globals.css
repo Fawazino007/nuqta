@@ -1,0 +1,555 @@
+@import "tailwindcss";
+
+/* ── RESET & BASE ───────────────────────────────── */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #2a2a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* ── CRT WRAPPER ────────────────────────────────── */
+
+.crt-outer {
+  background: #b8a882;
+  padding: 60px 80px 80px;
+  border-radius: 0;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.4);
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  box-sizing: border-box;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.crt-screen {
+  background: #e8e4d8;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  height: 100%;
+  min-height: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 80px rgba(0,0,0,0.15), inset 0 0 20px rgba(0,0,0,0.1);
+  transform: perspective(1200px) rotateX(1deg);
+  animation: flicker 8s infinite;
+}
+
+.crt-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 50%, rgba(255,255,255,0.01) 100%);
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0.04;
+}
+
+.crt-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.35) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.crt-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(9px, 2vw, 11px);
+  color: #7a6a4a;
+  letter-spacing: 4px;
+  text-align: center;
+  margin-top: 14px;
+  transition: color 0.15s;
+  touch-action: manipulation;
+}
+
+.crt-label:hover { color: #3a2a1a; }
+
+/* ── VHS EFFECT LAYERS ──────────────────────────── */
+
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px, transparent 3px,
+    rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.vhs-noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  animation: noise 0.1s steps(1) infinite;
+}
+
+.vhs-glitch {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.04;
+  animation: vhsGlitch 6s step-end infinite;
+  background: transparent;
+}
+
+.vhs-chroma {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,0,0,0.08) 0%, transparent 40%, rgba(0,0,255,0.08) 100%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  animation: chromatic 5s ease-in-out infinite;
+}
+
+.vhs-bars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px, transparent 28px,
+    rgba(0,255,80,0.06) 28px, rgba(0,255,80,0.06) 30px,
+    transparent 30px, transparent 58px,
+    rgba(255,30,0,0.05) 58px, rgba(255,30,0,0.05) 60px
+  );
+  animation: glitchBar 5s step-end infinite;
+}
+
+.vhs-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: rgba(255,220,100,0.04);
+}
+
+.vhs-scanroll {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.12);
+  pointer-events: none;
+  z-index: 2;
+  animation: scanRoll 12s linear infinite;
+}
+
+/* ── SCREEN CONTENT ─────────────────────────────── */
+
+.screen-content {
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  text-align: center;
+  padding: 32px 24px;
+}
+
+.start-screen {
+  padding-top: 80px;
+}
+
+.nuqta-logo {
+  width: clamp(260px, 58%, 480px);
+  object-fit: contain;
+  margin: 0 auto 28px;
+  display: block;
+  position: relative;
+  left: 12px;
+  opacity: 0.82;
+}
+
+.racket-img {
+  width: clamp(140px, 32%, 260px);
+  display: block;
+  margin: 36px auto 0;
+  opacity: 0.82;
+  object-fit: contain;
+}
+
+/* ── PRESS START BUTTON ─────────────────────────── */
+
+.press-start-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(13px, 3vw, 18px);
+  color: #e8e4d8;
+  letter-spacing: 3px;
+  background: rgba(26,26,26,0.82);
+  border: none;
+  cursor: pointer;
+  padding: 12px 20px;
+  transition: background 0.15s;
+  touch-action: manipulation;
+}
+
+.press-start-btn:hover,
+.press-start-btn:active { background: #333; }
+
+.breathe-text {
+  animation: breathe 2.4s ease-in-out infinite;
+  display: inline-block;
+}
+
+.copyright {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #555;
+  letter-spacing: 2px;
+  margin-top: 40px;
+}
+
+/* ── MARKETPLACE ────────────────────────────────── */
+
+.market-screen {
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 36px 20px;
+  text-align: left;
+}
+
+.market-seller {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(8px, 1.1vw, 11px);
+  color: #666;
+  letter-spacing: 1px;
+}
+
+.market-seller span { color: #1a1a1a; }
+
+.market-photo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  flex-shrink: 0;
+}
+
+.market-photo-box {
+  width: clamp(200px, 44%, 320px);
+  height: 220px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #1a1a1a;
+  background: #ffffff;
+  position: relative;
+}
+
+.market-photo-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px, transparent 3px,
+    rgba(26,26,26,0.06) 3px, rgba(26,26,26,0.06) 4px
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.market-photo-placeholder {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    #e8e4d8 0px, #e8e4d8 4px,
+    #d8d4c8 4px, #d8d4c8 8px
+  );
+  background-size: 100% 8px;
+  animation: noise 0.2s steps(1) infinite;
+  z-index: 0;
+}
+
+.market-photo {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  position: relative;
+  z-index: 2;
+  transition: opacity 0.15s;
+}
+
+.market-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(9px, 1.8vw, 15px);
+  color: #1a1a1a;
+  letter-spacing: 2px;
+  text-align: center;
+  line-height: 1.9;
+  margin-bottom: 12px;
+}
+
+.market-stats {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  border: 2px solid #1a1a1a;
+  width: fit-content;
+  margin: 0 auto 14px;
+}
+
+.market-stat {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(9px, 1.3vw, 12px);
+  color: #1a1a1a;
+  padding: 10px 20px;
+  letter-spacing: 1px;
+  text-align: center;
+  line-height: 2.2;
+}
+
+.market-stat + .market-stat { border-left: 2px solid #1a1a1a; }
+
+.market-stat-label {
+  display: block;
+  font-size: clamp(6px, 0.9vw, 9px);
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.market-price {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(15px, 2.5vw, 22px);
+  color: #1a1a1a;
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+
+.market-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+}
+
+.nav-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(10px, 1.4vw, 13px);
+  color: #1a1a1a;
+  background: none;
+  border: 2px solid #1a1a1a;
+  padding: 8px 14px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.1s, color 0.1s;
+}
+
+.nav-btn:hover,
+.nav-btn:active {
+  background: #1a1a1a;
+  color: #e8e4d8;
+}
+
+.market-seller-nav { display: none; }
+
+.market-counter {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(8px, 1.2vw, 11px);
+  color: #1a1a1a;
+  letter-spacing: 3px;
+  animation: blink 2.2s ease-in-out infinite;
+}
+
+/* ── KEYFRAMES ──────────────────────────────────── */
+
+@keyframes breathe {
+  0%, 100% {
+    opacity: 1;
+    text-shadow:
+      0 0 6px rgba(232,228,216,0.9),
+      0 0 14px rgba(232,228,216,0.6),
+      0 0 28px rgba(232,228,216,0.35);
+  }
+  50% { opacity: 0.15; text-shadow: none; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes flicker {
+  0%,100% { opacity: 1; }
+  30%     { opacity: 0.92; }
+  31%     { opacity: 1; }
+  65%     { opacity: 0.94; }
+  66%     { opacity: 1; }
+  85%     { opacity: 0.92; }
+  86%     { opacity: 1; }
+}
+
+@keyframes vhsGlitch {
+  0%,86%   { transform: none; }
+  87%      { transform: translateX(-3px); }
+  88%      { transform: translateX(2px); }
+  89%,100% { transform: none; }
+}
+
+@keyframes chromatic {
+  0%,78%,84%,100% { opacity: 0; }
+  80%             { opacity: 1; }
+  82%             { opacity: 0.6; }
+}
+
+@keyframes glitchBar {
+  0%,94%,100% { opacity: 0; background-position: 0 0; }
+  95%         { opacity: 1; background-position: 0 20%; }
+  96%         { opacity: 1; background-position: 0 60%; }
+  97%         { opacity: 1; background-position: 0 40%; }
+  98%         { opacity: 0; }
+}
+
+@keyframes noise {
+  0%   { background-position: 0 0; }
+  10%  { background-position: -5% -10%; }
+  20%  { background-position: 10% 5%; }
+  30%  { background-position: -3% 8%; }
+  40%  { background-position: 7% -3%; }
+  50%  { background-position: -8% 12%; }
+  60%  { background-position: 4% -7%; }
+  70%  { background-position: -6% 3%; }
+  80%  { background-position: 9% -5%; }
+  90%  { background-position: -2% 10%; }
+  100% { background-position: 0 0; }
+}
+
+@keyframes scanRoll {
+  0%   { top: -2%; }
+  100% { top: 105%; }
+}
+
+/* ── MOBILE ─────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  body { overflow: hidden; background: #e8e4d8; }
+
+  .crt-outer { padding: 0; border-radius: 0; background: #e8e4d8; }
+
+  .crt-screen { min-height: unset; flex: 1; border-radius: 0; }
+
+  .crt-label { display: none; }
+
+  .screen-content { transform: translateY(-16%); }
+
+  .start-screen { transform: translateY(-6%); }
+
+  .press-start-btn { font-size: 15px; padding: 13px 20px; }
+
+  .copyright { font-size: 6px; }
+
+  .nuqta-logo {
+    width: clamp(200px, 82%, 360px) !important;
+    left: 0 !important;
+  }
+
+  .racket-img {
+    width: clamp(130px, 60%, 220px) !important;
+    margin-top: 32px !important;
+  }
+
+  /* Marketplace mobile */
+  .market-screen {
+    transform: translateY(-5%);
+    padding: 10px 16px 10px;
+    justify-content: center;
+    gap: 6px;
+    min-height: unset;
+  }
+
+  .market-seller { display: none; }
+
+  .market-seller-nav {
+    display: block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #1a1a1a;
+    letter-spacing: 1px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+  }
+
+  .market-photo-wrap { padding: 0; flex-shrink: 0; }
+
+  .market-photo-box {
+    width: clamp(200px, 82%, 320px);
+    height: 210px;
+    margin: 0 auto;
+  }
+
+  .market-name {
+    font-size: 14px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    line-height: 1.9;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+  }
+
+  .market-stats { margin: 26px auto 0; }
+
+  .market-stat {
+    padding: 10px 16px;
+    font-size: 11px;
+    line-height: 2.2;
+  }
+
+  .market-stat-label { font-size: 8px; margin-bottom: 3px; }
+
+  .market-price {
+    font-size: 22px;
+    margin-top: 22px;
+    margin-bottom: 0;
+  }
+
+  .market-nav { gap: 32px; margin-top: 22px; }
+
+  .nav-btn { font-size: 17px; padding: 13px 24px; }
+}

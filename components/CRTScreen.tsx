@@ -1,10 +1,23 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSupabase } from '@/lib/supabase';
 
 export default function CRTScreen() {
   const router = useRouter();
+  const [destination, setDestination] = useState<'/auth' | '/marketplace'>('/auth');
+
+  useEffect(() => {
+    router.prefetch('/auth');
+    router.prefetch('/marketplace');
+  }, [router]);
+
+  useEffect(() => {
+    getSupabase().auth.getSession().then(({ data: { session } }) => {
+      setDestination(session ? '/marketplace' : '/auth');
+    });
+  }, []);
 
   useEffect(() => {
     if (!window.matchMedia('(hover: hover)').matches) return;
@@ -43,8 +56,8 @@ export default function CRTScreen() {
           <img src="/nuqta-logo-v3.png" alt="NUQTA" className="nuqta-logo" />
           <button
             className="press-start-btn"
-            onClick={() => router.push('/auth')}
-            onTouchEnd={e => { e.preventDefault(); router.push('/auth'); }}
+            onClick={() => router.push(destination)}
+            onTouchEnd={e => { e.preventDefault(); router.push(destination); }}
           >
             <span className="breathe-text">PRESS START</span>
           </button>

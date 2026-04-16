@@ -1,21 +1,34 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabase } from '@/lib/supabase';
 
-type Mode = 'login' | 'signup';
+type Mode = 'login' | 'signup' | 'forgot';
+
+const USERNAME_RE = /^[a-z][a-z0-9_]{2,19}$/;
+
+function validateUsername(u: string): string | null {
+  if (u.length < 3) return 'USERNAME TOO SHORT (MIN 3)';
+  if (u.length > 20) return 'USERNAME TOO LONG (MAX 20)';
+  if (!/^[a-z]/.test(u)) return 'USERNAME MUST START WITH A LETTER';
+  if (!USERNAME_RE.test(u)) return 'ONLY LETTERS, NUMBERS, UNDERSCORES';
+  return null;
+}
 
 export default function AuthScreen() {
   const router = useRouter();
 
   const [mode, setMode] = useState<Mode>('login');
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signedUp, setSignedUp] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     if (!window.matchMedia('(hover: hover)').matches) return;
@@ -38,11 +51,35 @@ export default function AuthScreen() {
     document.documentElement.style.cursor = `url(${canvas.toDataURL()}) 16 16, auto`;
   }, []);
 
+  const handleUsernameChange = useCallback((val: string) => {
+    const cleaned = val.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setUsername(cleaned);
+    if (cleaned.length > 0) {
+      setUsernameError(validateUsername(cleaned));
+    } else {
+      setUsernameError(null);
+    }
+  }, []);
+
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     const supabase = getSupabase();
+
+    if (mode === 'forgot') {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://getnuqta.com/reset-password',
+      });
+      if (error) {
+        setError(error.message.toUpperCase());
+        setLoading(false);
+      } else {
+        setResetSent(true);
+        setLoading(false);
+      }
+      return;
+    }
 
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -50,27 +87,54 @@ export default function AuthScreen() {
         setError(error.message.toUpperCase());
         setLoading(false);
       } else {
-        router.push('/sell');
+        router.push('/marketplace');
       }
     } else {
-      const { error } = await supabase.auth.signUp({
+      const validationErr = validateUsername(username);
+      if (validationErr) {
+        setUsernameError(validationErr);
+        setLoading(false);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('PASSWORDS DO NOT MATCH');
+        setLoading(false);
+        return;
+      }
+
+      // Check username uniqueness
+      const { data: existing } = await supabase
+        .from('users')
+        .select('id')
+        .eq('username', username)
+        .maybeSingle();
+      if (existing) {
+        setError('USERNAME TAKEN');
+        setLoading(false);
+        return;
+      }
+
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: name } },
+        options: { data: { username } },
       });
-      if (error) {
-        setError(error.message.toUpperCase());
+      if (signUpError) {
+        setError(signUpError.message.toUpperCase());
         setLoading(false);
-      } else {
-        setSignedUp(true);
-        setLoading(false);
+        return;
       }
+
+      // users row is created automatically by a Postgres trigger on auth.users
+      setSignedUp(true);
+      setLoading(false);
     }
-  }, [mode, email, password, name, router]);
+  }, [mode, email, password, confirmPassword, username, router]);
 
   const switchMode = useCallback((next: Mode) => {
     setMode(next);
     setError(null);
+    setResetSent(false);
   }, []);
 
   return (
@@ -93,6 +157,43 @@ export default function AuthScreen() {
             <p className="pixel-message">
               CHECK YOUR EMAIL<br />TO CONFIRM<br />YOUR ACCOUNT
             </p>
+          ) : resetSent ? (
+            <p className="pixel-message">
+              CHECK YOUR EMAIL<br />FOR RESET LINK
+            </p>
+          ) : mode === 'forgot' ? (
+            <>
+              <p className="auth-title" style={{ marginTop: '44px' }}>
+                RESET PASSWORD
+              </p>
+              <form className="pixel-form" onSubmit={handleSubmit}>
+                <div className="pixel-field">
+                  <label className="pixel-label">EMAIL</label>
+                  <input
+                    className="pixel-input"
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+
+                {error && <p className="pixel-error">{error}</p>}
+
+                <button className="pixel-submit" type="submit" disabled={loading}>
+                  {loading ? 'SENDING...' : 'SEND RESET LINK'}
+                </button>
+
+                <button
+                  type="button"
+                  className="pixel-forgot"
+                  onClick={() => switchMode('login')}
+                >
+                  ◄ BACK TO LOGIN
+                </button>
+              </form>
+            </>
           ) : (
             <>
               <div className="auth-tabs">
@@ -113,15 +214,18 @@ export default function AuthScreen() {
               <form className="pixel-form" onSubmit={handleSubmit}>
                 {mode === 'signup' && (
                   <div className="pixel-field">
-                    <label className="pixel-label">FULL NAME</label>
+                    <label className="pixel-label">USERNAME</label>
                     <input
                       className="pixel-input"
                       type="text"
-                      value={name}
-                      onChange={e => setName(e.target.value)}
+                      value={username}
+                      onChange={e => handleUsernameChange(e.target.value)}
+                      placeholder="E.G. PLAYER_1"
                       required
-                      autoComplete="name"
+                      autoComplete="username"
+                      autoCapitalize="none"
                     />
+                    {usernameError && <p className="pixel-error" style={{ marginTop: '4px' }}>{usernameError}</p>}
                   </div>
                 )}
 
@@ -150,11 +254,36 @@ export default function AuthScreen() {
                   />
                 </div>
 
+                {mode === 'signup' && (
+                  <div className="pixel-field">
+                    <label className="pixel-label">CONFIRM PASSWORD</label>
+                    <input
+                      className="pixel-input"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                )}
+
                 {error && <p className="pixel-error">{error}</p>}
 
                 <button className="pixel-submit" type="submit" disabled={loading}>
                   {loading ? 'LOADING...' : mode === 'login' ? 'LOGIN' : 'SIGN UP'}
                 </button>
+
+                {mode === 'login' && (
+                  <button
+                    type="button"
+                    className="pixel-forgot"
+                    onClick={() => switchMode('forgot')}
+                  >
+                    FORGOT PASSWORD?
+                  </button>
+                )}
               </form>
             </>
           )}

@@ -6,7 +6,7 @@ import { getSupabase } from '@/lib/supabase';
 
 interface Listing {
   id: string;
-  seller_name: string;
+  seller_id: string;
   photo_url: string;
   racket_name: string;
   condition: string;
@@ -14,6 +14,7 @@ interface Listing {
   grip_size: string;
   price: string;
   whatsapp: string;
+  users: { username: string } | null;
 }
 
 export default function MarketplaceBrowse() {
@@ -23,6 +24,11 @@ export default function MarketplaceBrowse() {
   const [loading, setLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const touchStartX = useRef(0);
+
+  const handleLogout = useCallback(async () => {
+    await getSupabase().auth.signOut();
+    router.push('/');
+  }, [router]);
 
   useEffect(() => {
     if (!window.matchMedia('(hover: hover)').matches) return;
@@ -49,7 +55,7 @@ export default function MarketplaceBrowse() {
     const client = getSupabase();
     client
       .from('listings')
-      .select('*')
+      .select('*, users!seller_id(username)')
       .eq('status', 'ACTIVE')
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
@@ -91,8 +97,9 @@ export default function MarketplaceBrowse() {
   }, [listings.length, goNext, goPrev]);
 
   const l = listings[current];
+  const sellerUsername = l?.users?.username ?? '???';
   const waUrl = l
-    ? `https://wa.me/965${l.whatsapp}?text=${encodeURIComponent(`Hi, I'm interested in your ${l.racket_name} listed on NUQTA`)}`
+    ? `https://wa.me/${l.whatsapp.replace(/^\+/, '')}?text=${encodeURIComponent(`Hi, I'm interested in your ${l.racket_name} listed on NUQTA`)}`
     : '#';
 
   return (
@@ -110,6 +117,20 @@ export default function MarketplaceBrowse() {
         <div className="vhs-tint" />
         <div className="vhs-scanroll" />
 
+        <div className="market-top-actions">
+          <button className="market-top-btn" onClick={() => router.push('/profile')}>
+            PROFILE
+          </button>
+          <span className="market-top-divider">|</span>
+          <button className="market-top-btn" onClick={handleLogout}>
+            LOGOUT
+          </button>
+        </div>
+
+        <button className="market-back-btn" onClick={() => router.push('/')}>
+          ← BACK
+        </button>
+
         {loading && (
           <div className="screen-content" style={{ textAlign: 'center' }}>
             <p className="market-name loading-blink">LOADING...</p>
@@ -124,7 +145,9 @@ export default function MarketplaceBrowse() {
 
         {!loading && l && (
           <div className="market-screen">
-            <div className="market-seller">{l.seller_name}</div>
+            <button className="market-seller market-seller-link" onClick={() => router.push('/profile')}>
+              @{sellerUsername}
+            </button>
 
             <div className="market-name">{l.racket_name}</div>
 
@@ -149,7 +172,7 @@ export default function MarketplaceBrowse() {
               </div>
               <div className="market-stat">
                 <span className="market-stat-label">WEIGHT</span>
-                {l.weight}
+                {l.weight}G
               </div>
               <div className="market-stat">
                 <span className="market-stat-label">GRIP</span>
@@ -157,7 +180,9 @@ export default function MarketplaceBrowse() {
               </div>
             </div>
 
-            <div className="market-price">{l.price}</div>
+            <div className="market-price">
+              KD {parseFloat(l.price).toFixed(3)}
+            </div>
 
             <a
               href={waUrl}
@@ -165,16 +190,25 @@ export default function MarketplaceBrowse() {
               rel="noopener noreferrer"
               className="whatsapp-btn"
             >
-              CONTACT ON WHATSAPP
+              💬 CONTACT ON WHATSAPP
             </a>
 
-            <div className="market-nav">
-              <button className="nav-btn" onClick={goPrev} aria-label="Previous">◄</button>
-              <div className="market-seller-nav">{l.seller_name}</div>
-              <button className="nav-btn" onClick={goNext} aria-label="Next">►</button>
+            {listings.length > 1 && (
+              <div className="market-nav">
+                <button className="nav-btn" onClick={goPrev} aria-label="Previous">◄</button>
+                <button className="nav-btn" onClick={goNext} aria-label="Next">►</button>
+              </div>
+            )}
+
+            <div className="market-counter">
+              {String(current + 1).padStart(2, '0')} / {String(listings.length).padStart(2, '0')}
             </div>
           </div>
         )}
+
+        <button className="sell-corner-btn" onClick={() => router.push('/sell')}>
+          SELL A RACKET
+        </button>
       </div>
 
       <div className="crt-label" onClick={() => router.push('/')} style={{ cursor: 'pointer' }}>

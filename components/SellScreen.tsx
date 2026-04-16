@@ -6,7 +6,8 @@ import { getSupabase } from '@/lib/supabase';
 
 interface AuthUser {
   id: string;
-  full_name: string;
+  username: string;
+  whatsapp: string | null;
 }
 
 export default function SellScreen() {
@@ -21,7 +22,6 @@ export default function SellScreen() {
   const [weight, setWeight] = useState('');
   const [gripSize, setGripSize] = useState('G2');
   const [price, setPrice] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
@@ -51,14 +51,20 @@ export default function SellScreen() {
 
   useEffect(() => {
     const supabase = getSupabase();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) {
         router.push('/auth');
         return;
       }
+      const { data: row } = await supabase
+        .from('users')
+        .select('username, whatsapp')
+        .eq('id', user.id)
+        .maybeSingle();
       setUser({
         id: user.id,
-        full_name: user.user_metadata?.full_name ?? user.email ?? 'UNKNOWN',
+        username: row?.username ?? user.user_metadata?.username ?? user.email ?? 'UNKNOWN',
+        whatsapp: row?.whatsapp ?? null,
       });
       setAuthChecked(true);
     });
@@ -72,12 +78,25 @@ export default function SellScreen() {
       return;
     }
 
+    if (!user.whatsapp) {
+      setError('ADD WHATSAPP NUMBER IN YOUR ACCOUNT FIRST');
+      return;
+    }
+
+    const weightNum = parseInt(weight, 10);
+    if (isNaN(weightNum) || weightNum < 100 || weightNum > 999) {
+      setError('WEIGHT MUST BE BETWEEN 100 AND 999');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     const supabase = getSupabase();
 
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+
     const ext = photo.name.split('.').pop() ?? 'jpg';
-    const path = `${user.id}/${Date.now()}.${ext}`;
+    const path = `${currentUser?.id ?? user.id}/${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from('listing-photos')
       .upload(path, photo);
@@ -93,14 +112,13 @@ export default function SellScreen() {
       .getPublicUrl(path);
 
     const { error: insertError } = await supabase.from('listings').insert({
-      seller_id: user.id,
-      seller_name: user.full_name,
+      seller_id: currentUser?.id ?? user.id,
       racket_name: racketName,
       condition,
       weight,
       grip_size: gripSize,
       price,
-      whatsapp,
+      whatsapp: user.whatsapp,
       photo_url: publicUrl,
       status: 'ACTIVE',
     });
@@ -114,7 +132,7 @@ export default function SellScreen() {
     setPosted(true);
     setSubmitting(false);
     setTimeout(() => router.push('/marketplace'), 2000);
-  }, [user, photo, racketName, condition, weight, gripSize, price, whatsapp, router]);
+  }, [user, photo, racketName, condition, weight, gripSize, price, router]);
 
   return (
     <div className="crt-outer">
@@ -178,13 +196,16 @@ export default function SellScreen() {
                 </div>
 
                 <div className="pixel-field">
-                  <label className="pixel-label">WEIGHT</label>
+                  <label className="pixel-label">WEIGHT (G)</label>
                   <input
                     className="pixel-input"
-                    type="text"
+                    type="number"
                     value={weight}
                     onChange={e => setWeight(e.target.value)}
-                    placeholder="E.G. 300G"
+                    placeholder="E.G. 300"
+                    min={100}
+                    max={999}
+                    step={1}
                     required
                   />
                 </div>
@@ -208,22 +229,12 @@ export default function SellScreen() {
                   <label className="pixel-label">PRICE (KD)</label>
                   <input
                     className="pixel-input"
-                    type="text"
+                    type="number"
                     value={price}
                     onChange={e => setPrice(e.target.value)}
-                    placeholder="E.G. KD 45.000"
-                    required
-                  />
-                </div>
-
-                <div className="pixel-field">
-                  <label className="pixel-label">WHATSAPP NUMBER</label>
-                  <input
-                    className="pixel-input"
-                    type="tel"
-                    value={whatsapp}
-                    onChange={e => setWhatsapp(e.target.value)}
-                    placeholder="E.G. 99001234"
+                    placeholder="E.G. 45.000"
+                    min={0}
+                    step={0.001}
                     required
                   />
                 </div>

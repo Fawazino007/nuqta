@@ -95,14 +95,14 @@ body {
     rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px
   );
   pointer-events: none;
-  z-index: 2;
+  z-index: 25;
 }
 
 .vhs-noise {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 24;
   opacity: 0.06;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 200px 200px;
@@ -113,7 +113,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 2;
+  z-index: 25;
   opacity: 0.04;
   animation: vhsGlitch 6s step-end infinite;
   background: transparent;
@@ -125,7 +125,7 @@ body {
   background: linear-gradient(90deg, rgba(255,0,0,0.08) 0%, transparent 40%, rgba(0,0,255,0.08) 100%);
   mix-blend-mode: screen;
   pointer-events: none;
-  z-index: 1;
+  z-index: 24;
   opacity: 0;
   animation: chromatic 5s ease-in-out infinite;
 }
@@ -134,7 +134,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 2;
+  z-index: 25;
   opacity: 0;
   background: repeating-linear-gradient(
     to bottom,
@@ -150,7 +150,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 24;
   background: rgba(255,220,100,0.04);
 }
 
@@ -161,7 +161,7 @@ body {
   height: 6px;
   background: rgba(255,255,255,0.12);
   pointer-events: none;
-  z-index: 2;
+  z-index: 26;
   animation: scanRoll 12s linear infinite;
 }
 
@@ -268,7 +268,7 @@ body {
   align-items: center;
   justify-content: center;
   border: 3px solid #1a1a1a;
-  background: #ffffff;
+  background: #e8e4d8;
   position: relative;
 }
 
@@ -312,12 +312,12 @@ body {
 
 .market-name {
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(9px, 1.8vw, 15px);
+  font-size: clamp(14px, 2.8vw, 24px);
   color: #1a1a1a;
   letter-spacing: 2px;
   text-align: center;
-  line-height: 1.9;
-  margin-bottom: 12px;
+  line-height: 1.7;
+  margin-bottom: 10px;
 }
 
 .market-stats {
@@ -361,16 +361,16 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: clamp(24px, 4vw, 56px);
+  gap: clamp(48px, 8vw, 100px);
 }
 
 .nav-btn {
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(10px, 1.4vw, 13px);
+  font-size: clamp(14px, 2vw, 18px);
   color: #1a1a1a;
   background: none;
   border: 2px solid #1a1a1a;
-  padding: 8px 14px;
+  padding: 12px 22px;
   cursor: pointer;
   touch-action: manipulation;
   transition: background 0.1s, color 0.1s;
@@ -389,7 +389,9 @@ body {
   font-size: clamp(8px, 1.2vw, 11px);
   color: #1a1a1a;
   letter-spacing: 3px;
-  animation: blink 2.2s ease-in-out infinite;
+  text-align: center;
+  margin-top: 10px;
+  animation: blink 3s ease-in-out infinite;
 }
 
 .whatsapp-btn {
@@ -407,7 +409,7 @@ body {
   text-decoration: none;
   letter-spacing: 1px;
   width: fit-content;
-  margin: 0 auto;
+  margin: 0 auto 20px;
 }
 
 .whatsapp-btn:hover,
@@ -787,4 +789,159 @@ body {
   .pixel-select { font-size: 11px; padding: 10px; }
 
   .pixel-submit { font-size: 10px; padding: 14px; }
+
+  .sell-corner-btn { font-size: 8px; padding: 9px 12px; bottom: 12px; right: 12px; }
+
+  .pixel-tel-cc { width: 64px; }
+
+  .nav-btn { font-size: 14px; padding: 11px 18px; }
+
+  .market-nav { gap: 40px; }
+}
+
+/* ── SELL CORNER BUTTON ─────────────────────────── */
+
+.sell-corner-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(7px, 1vw, 9px);
+  color: #1a1a1a;
+  background: #e8e4d8;
+  border: 2px solid #1a1a1a;
+  padding: 10px 16px;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  z-index: 30;
+  touch-action: manipulation;
+}
+
+.sell-corner-btn:hover {
+  background: #1a1a1a;
+  color: #e8e4d8;
+}
+
+/* ── WHATSAPP SPLIT ROW ──────────────────────────── */
+
+.pixel-tel-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pixel-tel-cc {
+  width: 72px;
+  flex-shrink: 0;
+}
+
+.pixel-tel-num {
+  flex: 1;
+}
+
+/* ── FORGOT PASSWORD BUTTON ─────────────────────── */
+
+.pixel-forgot {
+  font-family: inherit;
+  font-size: 10px;
+  color: #888;
+  background: none;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  margin-top: 12px;
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.pixel-forgot:hover {
+  color: #1a1a1a;
+}
+
+/* ── MARKETPLACE TOP ACTIONS (PROFILE / LOGOUT) ─── */
+
+.market-top-actions {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  z-index: 30;
+}
+
+.market-top-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #1a1a1a;
+  background: transparent;
+  border: 2px solid #1a1a1a;
+  padding: 8px 12px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  touch-action: manipulation;
+  transition: background 0.1s, color 0.1s;
+}
+
+.market-top-btn:hover,
+.market-top-btn:active {
+  background: #1a1a1a;
+  color: #e8e4d8;
+}
+
+.market-top-divider {
+  font-family: 'Press Start 2P', monospace;
+  color: #1a1a1a;
+  margin: 0 8px;
+  font-size: 8px;
+  user-select: none;
+}
+
+.market-back-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #1a1a1a;
+  background: transparent;
+  border: 2px solid #1a1a1a;
+  padding: 8px 12px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  touch-action: manipulation;
+  transition: background 0.1s, color 0.1s;
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  z-index: 30;
+}
+
+.market-back-btn:hover,
+.market-back-btn:active {
+  background: #1a1a1a;
+  color: #e8e4d8;
+}
+
+/* ── SELLER LINK ────────────────────────────────── */
+
+.market-seller-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: color 0.15s;
+}
+
+.market-seller-link:hover { color: #1a1a1a; }
+
+/* ── PROFILE SECTION DIVIDER ────────────────────── */
+
+.pixel-section-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(6px, 0.8vw, 8px);
+  color: #aaa;
+  letter-spacing: 2px;
+  border-top: 1px solid #ccc;
+  padding-top: 14px;
+  margin-top: 4px;
 }
